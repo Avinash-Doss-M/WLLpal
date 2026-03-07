@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wellpal AI Chat</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+/* ─── TOKENS ─────────────────────────── */
+:root {
+  --mint:       #C8F5E1;
+  --mint-mid:   #7EDCB0;
+  --green-deep: #1A6B4A;
+  --green-dark: #0D3D2B;
+  --green-btn:  #1e7a56;
+  --cream:      #F9F5EE;
+  --warm-white: #FEFCF8;
+  --charcoal:   #1C1C1E;
+  --text-body:  #3A3A3C;
+  --coral:      #FF7F6B;
+  --sidebar-bg: #091f14;
+  --sidebar-w:  264px;
+  --input-r:    20px;
+}
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--sidebar-bg);
+  color: var(--text-body);
+}
+
+/* noise grain */
+body::after {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* ─── APP SHELL ─────────────────────── */
+.app {
+  display: flex;
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════ */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+  border-right: 1px solid rgba(126,220,176,0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+
+/* logo */
+.sb-logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 22px 18px 18px;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(126,220,176,0.08);
+}
+.sb-logo-icon {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--mint-mid), var(--green-deep));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(26,107,74,0.4);
+}
+.sb-logo-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.3rem; color: white; letter-spacing: -0.01em;
+}
+
+/* new chat */
+.new-chat-btn {
+  display: flex; align-items: center; gap: 8px;
+  margin: 14px 12px 6px;
+  padding: 10px 14px;
+  background: rgba(126,220,176,0.08);
+  border: 1px solid rgba(126,220,176,0.18);
+  border-radius: 11px;
+  color: var(--mint);
+  font-size: 0.84rem; font-weight: 600;
+  cursor: pointer; transition: all 0.18s;
+  font-family: 'DM Sans', sans-serif;
+  width: calc(100% - 24px);
+}
+.new-chat-btn:hover {
+  background: rgba(126,220,176,0.16);
+  border-color: rgba(126,220,176,0.35);
+}
+
+/* scrollable area */
+.sb-scroll {
+  flex: 1; overflow-y: auto; padding: 4px 6px;
+}
+.sb-scroll::-webkit-scrollbar { width: 3px; }
+.sb-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+
+/* labels */
+.sb-label {
+  font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.22);
+  padding: 14px 12px 5px;
+}
+
+/* history + module items */
+.sb-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 12px; border-radius: 9px;
+  color: rgba(255,255,255,0.45);
+  font-size: 0.8rem; cursor: pointer;
+  transition: all 0.14s;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sb-item:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.82); }
+.sb-item.active-chat {
+  background: rgba(126,220,176,0.11);
+  color: var(--mint-mid);
+}
+.sb-item-ico { font-size: 0.82rem; flex-shrink: 0; }
+
+/* footer */
+.sb-footer {
+  padding: 10px 12px 14px;
+  border-top: 1px solid rgba(126,220,176,0.08);
+}
+.sb-back {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: 9px;
+  color: rgba(255,255,255,0.38); font-size: 0.8rem;
+  cursor: pointer; text-decoration: none;
+  transition: all 0.14s; margin-bottom: 4px;
+}
+.sb-back:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.75); }
+.sb-user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 10px;
+  cursor: pointer; transition: background 0.15s;
+}
+.sb-user:hover { background: rgba(255,255,255,0.05); }
+.sb-avatar {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--mint-mid), var(--green-deep));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.88rem; flex-shrink: 0;
+}
+.sb-uname { font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.76); }
+.sb-uplan { font-size: 0.67rem; color: rgba(255,255,255,0.28); margin-top: 1px; }
+
+/* ═══════════════════════════════════════
+   MAIN PANEL
+═══════════════════════════════════════ */
+.chat-main {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
+  background: var(--warm-white);
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── TOPBAR ─────────────────────────── */
+.topbar {
+  height: 58px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 22px;
+  background: white;
+  border-bottom: 1px solid rgba(126,220,176,0.13);
+  box-shadow: 0 1px 12px rgba(26,107,74,0.05);
+  z-index: 10;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.hamburger {
+  display: none; background: none; border: none;
+  color: var(--green-deep); font-size: 1.1rem;
+  cursor: pointer; padding: 6px; border-radius: 8px;
+  transition: background 0.15s;
+}
+.hamburger:hover { background: rgba(200,245,225,0.35); }
+.topbar-bot { display: flex; align-items: center; gap: 10px; }
+.topbar-bot-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--mint-mid), var(--green-deep));
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  box-shadow: 0 3px 10px rgba(26,107,74,0.2);
+}
+.topbar-bot-name { font-size: 0.92rem; font-weight: 700; color: var(--charcoal); }
+.topbar-bot-status {
+  font-size: 0.7rem; color: #34C759;
+  display: flex; align-items: center; gap: 5px;
+}
+.status-dot {
+  width: 6px; height: 6px; background: #34C759;
+  border-radius: 50%;
+  animation: pulse-g 2s ease-in-out infinite;
+}
+@keyframes pulse-g {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:0.45; transform:scale(1.4); }
+}
+.topbar-actions { display: flex; gap: 7px; }
+.topbar-btn {
+  width: 34px; height: 34px;
+  background: var(--cream);
+  border: 1.5px solid rgba(126,220,176,0.25);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 0.88rem;
+  transition: all 0.16s; color: var(--text-body);
+}
+.topbar-btn:hover { border-color: var(--green-deep); background: rgba(200,245,225,0.3); }
+
+/* ── MESSAGES SCROLL ────────────────── */
+.msgs-wrap {
+  flex: 1; overflow-y: auto;
+  padding: 24px 0 8px;
+  display: flex; flex-direction: column;
+}
+.msgs-wrap::-webkit-scrollbar { width: 5px; }
+.msgs-wrap::-webkit-scrollbar-thumb { background: rgba(126,220,176,0.28); border-radius: 4px; }
+
+/* ── WELCOME STATE ─────────────────── */
+.welcome {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 32px 24px 16px; text-align: center;
+  animation: rise 0.55s cubic-bezier(.2,.8,.4,1) both;
+}
+@keyframes rise {
+  from { opacity:0; transform:translateY(22px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.welcome-orb {
+  width: 76px; height: 76px;
+  background: linear-gradient(135deg, var(--mint-mid), var(--green-deep));
+  border-radius: 24px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem; margin-bottom: 22px;
+  box-shadow: 0 12px 40px rgba(26,107,74,0.28);
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform:translateY(0) rotate(-1deg); }
+  50%      { transform:translateY(-9px) rotate(1deg); }
+}
+.welcome h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 2rem; color: var(--charcoal);
+  margin-bottom: 10px; letter-spacing: -0.02em;
+}
+.welcome p {
+  font-size: 0.95rem; color: var(--text-body);
+  opacity: 0.55; max-width: 400px;
+  line-height: 1.68; margin-bottom: 36px;
+}
+
+/* suggestion cards */
+.sug-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 11px; width: 100%; max-width: 580px;
+}
+.sug-card {
+  background: white;
+  border: 1.5px solid rgba(126,220,176,0.18);
+  border-radius: 15px; padding: 16px 17px;
+  cursor: pointer; text-align: left;
+  transition: all 0.2s;
+  animation: rise 0.55s cubic-bezier(.2,.8,.4,1) both;
+}
+.sug-card:nth-child(1){animation-delay:0.08s}
+.sug-card:nth-child(2){animation-delay:0.13s}
+.sug-card:nth-child(3){animation-delay:0.18s}
+.sug-card:nth-child(4){animation-delay:0.23s}
+.sug-card:hover {
+  border-color: var(--mint-mid);
+  background: rgba(200,245,225,0.14);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 26px rgba(26,107,74,0.1);
+}
+.sug-ico  { font-size: 1.25rem; margin-bottom: 7px; }
+.sug-t    { font-size: 0.84rem; font-weight: 600; color: var(--charcoal); }
+.sug-sub  { font-size: 0.74rem; color: var(--text-body); opacity: 0.5; margin-top: 3px; line-height: 1.4; }
+
+/* ── DATE DIVIDER ─────────────────── */
+.date-div {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 28px 4px;
+}
+.date-div::before, .date-div::after {
+  content:''; flex:1; height:1px;
+  background: rgba(126,220,176,0.18);
+}
+.date-div span {
+  font-size: 0.68rem; color: var(--text-body);
+  opacity: 0.35; font-weight: 600;
+  letter-spacing: 0.05em; white-space: nowrap;
+}
+
+/* ── MESSAGE ROWS ─────────────────── */
+.msg-row {
+  display: flex; gap: 13px;
+  padding: 5px 28px;
+  animation: rise 0.28s ease both;
+}
+.msg-row.user { flex-direction: row-reverse; }
+
+.msg-ava {
+  width: 34px; height: 34px; flex-shrink: 0;
+  border-radius: 11px; margin-top: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  background: linear-gradient(135deg, var(--mint-mid), var(--green-deep));
+}
+.msg-row.user .msg-ava { background: var(--coral); color: white; }
+
+.msg-body   { max-width: 68%; display:flex; flex-direction:column; gap:4px; }
+.user .msg-body { align-items: flex-end; }
+.msg-name   { font-size: 0.69rem; font-weight: 700; color: var(--text-body); opacity:0.38; }
+.msg-bubble {
+  padding: 12px 17px; line-height: 1.65;
+  font-size: 0.9rem; word-break: break-word;
+  background: white;
+  border: 1px solid rgba(126,220,176,0.18);
+  border-radius: 18px 18px 18px 4px;
+  color: var(--text-body);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.user .msg-bubble {
+  background: var(--green-deep); color: white;
+  border: none;
+  border-radius: 18px 18px 4px 18px;
+  box-shadow: 0 4px 18px rgba(26,107,74,0.28);
+}
+.msg-time { font-size: 0.66rem; opacity: 0.28; }
+
+/* hover actions on AI messages */
+.msg-actions {
+  display: flex; gap: 5px; margin-top: 3px;
+  opacity: 0; transition: opacity 0.16s;
+}
+.msg-row:hover .msg-actions { opacity: 1; }
+.act-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 0.72rem; color: var(--green-deep);
+  padding: 3px 8px; border-radius: 6px;
+  opacity: 0.55; transition: all 0.14s;
+  font-family: 'DM Sans', sans-serif;
+}
+.act-btn:hover { opacity: 1; background: rgba(200,245,225,0.45); }
+
+/* ── TYPING INDICATOR ──────────────── */
+.typing-row {
+  display: flex; gap: 13px;
+  padding: 5px 28px;
+  animation: rise 0.25s ease both;
+}
+.typing-bub {
+  display: flex; gap: 5px; align-items: center;
+  padding: 13px 17px;
+  background: white;
+  border: 1px solid rgba(126,220,176,0.18);
+  border-radius: 18px 18px 18px 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.typing-bub span {
+  width: 7px; height: 7px;
+  background: var(--mint-mid); border-radius: 50%;
+  animation: bounce 1.3s ease-in-out infinite;
+}
+.typing-bub span:nth-child(2) { animation-delay: 0.17s; }
+.typing-bub span:nth-child(3) { animation-delay: 0.34s; }
+@keyframes bounce {
+  0%,60%,100% { transform: translateY(0); }
+  30%          { transform: translateY(-8px); }
+}
+
+/* ═══════════════════════════════════════
+   INPUT ZONE
+═══════════════════════════════════════ */
+.input-zone {
+  flex-shrink: 0;
+  padding: 10px 28px 18px;
+  background: var(--warm-white);
+}
+
+/* quick chips */
+.q-chips {
+  display: flex; gap: 7px; flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.q-chip {
+  background: rgba(200,245,225,0.36);
+  border: 1px solid rgba(126,220,176,0.34);
+  color: var(--green-deep);
+  padding: 5px 13px; border-radius: 100px;
+  font-size: 0.74rem; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+  transition: all 0.15s;
+}
+.q-chip:hover { background: var(--mint-mid); color: white; border-color: var(--mint-mid); }
+
+/* the input box itself */
+.input-box {
+  display: flex; align-items: flex-end; gap: 10px;
+  background: white;
+  border: 1.5px solid rgba(126,220,176,0.3);
+  border-radius: var(--input-r);
+  padding: 10px 12px 10px 18px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 14px rgba(26,107,74,0.06);
+}
+.input-box:focus-within {
+  border-color: var(--mint-mid);
+  box-shadow: 0 4px 24px rgba(26,107,74,0.13);
+}
+.chat-ta {
+  flex: 1; background: none; border: none; outline: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem; color: var(--charcoal);
+  resize: none; max-height: 160px;
+  line-height: 1.55; padding: 4px 0;
+}
+.chat-ta::placeholder { color: #bdbdbd; }
+
+.input-btns { display: flex; align-items: flex-end; gap: 7px; flex-shrink: 0; }
+
+.attach-btn {
+  width: 36px; height: 36px;
+  background: none; border: 1.5px solid rgba(126,220,176,0.26);
+  border-radius: 10px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--green-deep); opacity: 0.5;
+  transition: all 0.16s;
+}
+.attach-btn:hover { opacity: 1; border-color: var(--mint-mid); background: rgba(200,245,225,0.22); }
+.attach-btn.has-image { opacity: 1; border-color: var(--mint-mid); background: rgba(200,245,225,0.22); }
+
+/* Image preview strip */
+.img-preview-strip {
+  display: none;
+  padding: 8px 14px 0;
+}
+.img-preview-strip.active { display: flex; align-items: center; gap: 10px; }
+.img-preview-thumb {
+  position: relative;
+  width: 64px; height: 64px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid rgba(126,220,176,0.3);
+  flex-shrink: 0;
+}
+.img-preview-thumb img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.img-preview-remove {
+  position: absolute; top: -2px; right: -2px;
+  width: 20px; height: 20px;
+  background: var(--coral);
+  border: none; border-radius: 50%;
+  color: white; font-size: 12px;
+  cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+  line-height: 1; z-index: 2;
+}
+.img-preview-remove:hover { background: #e55; transform: scale(1.1); }
+.img-preview-label {
+  font-size: 0.78rem; color: var(--text-body); opacity: 0.6;
+  line-height: 1.3;
+}
+.img-preview-label span { display: block; font-size: 0.68rem; opacity: 0.6; margin-top: 2px; }
+
+/* Image in chat bubble */
+.msg-image {
+  max-width: 240px; max-height: 200px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+.send-btn {
+  width: 40px; height: 40px; flex-shrink: 0;
+  background: var(--green-deep); border: none;
+  border-radius: 12px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+  transition: all 0.18s;
+  box-shadow: 0 4px 14px rgba(26,107,74,0.32);
+}
+.send-btn:hover:not(:disabled) { background: var(--green-btn); transform: scale(1.07); box-shadow: 0 6px 20px rgba(26,107,74,0.4); }
+.send-btn:disabled { background: #d0d0d0; box-shadow: none; cursor: not-allowed; }
+
+.input-hint {
+  text-align: center; font-size: 0.68rem;
+  color: var(--text-body); opacity: 0.27;
+  margin-top: 9px; line-height: 1.4;
+}
+
+/* ─── MOBILE OVERLAY ─────────────────── */
+.sb-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45); z-index: 90;
+}
+
+/* ─── RESPONSIVE ─────────────────────── */
+@media (max-width: 800px) {
+  .sidebar {
+    position: fixed; top:0; left:0; bottom:0;
+    z-index: 100; transform: translateX(-100%);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sb-overlay.show { display: block; }
+  .hamburger { display: flex; align-items: center; justify-content: center; }
+  .msg-body { max-width: 84%; }
+  .sug-grid { grid-template-columns: 1fr; }
+  .msg-row, .typing-row { padding: 5px 16px; }
+  .input-zone { padding: 8px 14px 16px; }
+  .date-div { padding: 8px 16px; }
+}
+</style>
+<script src="auth.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <!-- ══════ SIDEBAR ══════ -->
+  <aside class="sidebar" id="sidebar">
+
+    <a href="wellpal-v5-updated (2).html" class="sb-logo">
+      <div class="sb-logo-icon">🌿</div>
+      <span class="sb-logo-name">Wellpal</span>
+    </a>
+
+    <button class="new-chat-btn" id="new-chat-btn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New conversation
+    </button>
+
+    <div class="sb-scroll">
+      <div class="sb-label">Recent</div>
+      <div class="sb-item active-chat"><span class="sb-item-ico">💊</span> Drug interaction check</div>
+      <div class="sb-item"><span class="sb-item-ico">🥗</span> Heart-healthy meal plan</div>
+      <div class="sb-item"><span class="sb-item-ico">❤️</span> Blood pressure concerns</div>
+      <div class="sb-item"><span class="sb-item-ico">🧘</span> Stress management tips</div>
+      <div class="sb-item"><span class="sb-item-ico">😴</span> Sleep improvement advice</div>
+      <div class="sb-item"><span class="sb-item-ico">🏃</span> Exercise routine guidance</div>
+
+      <div class="sb-label" style="margin-top:12px;">Modules</div>
+      <div class="sb-item" data-msg="Check for any drug interactions with my current medications"><span class="sb-item-ico">💊</span> Medicine Check</div>
+      <div class="sb-item" data-msg="Create a personalized heart-healthy 7-day meal plan for me"><span class="sb-item-ico">🥗</span> Diet Planner</div>
+      <div class="sb-item" data-msg="Assess my heart disease risk factors and give advice"><span class="sb-item-ico">❤️</span> Heart Risk</div>
+      <div class="sb-item" data-msg="Give me a complete daily wellness and fitness routine"><span class="sb-item-ico">🌿</span> Wellness Guide</div>
+      <div class="sb-item" data-msg="How can I improve my sleep quality naturally?"><span class="sb-item-ico">😴</span> Sleep Advisor</div>
+      <div class="sb-item" data-msg="How can I manage stress and anxiety naturally?"><span class="sb-item-ico">🧘</span> Mental Wellness</div>
+    </div>
+
+    <div class="sb-footer">
+      <a href="wellpal-v5-updated (2).html" class="sb-back">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back to Wellpal
+      </a>
+      <div class="sb-user">
+        <div class="sb-avatar">👤</div>
+        <div>
+          <div class="sb-uname">User</div>
+          <div class="sb-uplan">Premium · Wellpal</div>
+        </div>
+      </div>
+      <button id="sb-logout" onclick="if(typeof WellpalAuth!=='undefined')WellpalAuth.logout()" style="display:none;width:100%;margin-top:8px;padding:8px 12px;background:none;border:1px solid rgba(255,127,107,0.4);color:#FF7F6B;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Sign Out</button>
+    </div>
+
+  </aside>
+
+  <!-- mobile overlay -->
+  <div class="sb-overlay" id="sb-overlay"></div>
+
+  <!-- ══════ MAIN ══════ -->
+  <main class="chat-main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger-btn">☰</button>
+        <div class="topbar-bot">
+          <div class="topbar-bot-icon">🌿</div>
+          <div>
+            <div class="topbar-bot-name">Wellpal AI</div>
+            <div class="topbar-bot-status"><span class="status-dot"></span>Online · Health &amp; Wellness</div>
+          </div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="topbar-btn" id="btn-clear" title="Clear chat">🗑️</button>
+        <button class="topbar-btn" id="btn-new" title="New chat">✏️</button>
+        <button class="topbar-btn" id="btn-home" title="Back to home">🏠</button>
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="msgs-wrap" id="msgs-wrap">
+
+      <!-- Welcome (hidden after first message) -->
+      <div class="welcome" id="welcome">
+        <div class="welcome-orb">🌿</div>
+        <h2>Hello, there 👋</h2>
+        <p>I'm Wellpal AI, your intelligent health companion. Ask me anything about medicines, nutrition, heart health, or your wellness journey.</p>
+        <div class="sug-grid">
+          <div class="sug-card" data-msg="Can I take Ibuprofen with blood pressure medication?">
+            <div class="sug-ico">💊</div>
+            <div class="sug-t">Drug interaction check</div>
+            <div class="sug-sub">Is Ibuprofen safe with BP meds?</div>
+          </div>
+          <div class="sug-card" data-msg="Suggest a 7-day heart-healthy meal plan">
+            <div class="sug-ico">🥗</div>
+            <div class="sug-t">Heart-healthy meal plan</div>
+            <div class="sug-sub">Personalised 7-day diet plan</div>
+          </div>
+          <div class="sug-card" data-msg="What are the early signs of high blood pressure?">
+            <div class="sug-ico">❤️</div>
+            <div class="sug-t">Heart disease warning signs</div>
+            <div class="sug-sub">Understand early risk indicators</div>
+          </div>
+          <div class="sug-card" data-msg="Give me evidence-based stress relief tips for today">
+            <div class="sug-ico">🧘</div>
+            <div class="sug-t">Stress &amp; wellness tips</div>
+            <div class="sug-sub">Science-backed daily guidance</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /msgs-wrap -->
+
+    <!-- INPUT ZONE -->
+    <div class="input-zone">
+      <div class="q-chips" id="q-chips">
+        <span class="q-chip" data-msg="Can I take Ibuprofen with BP medication?">💊 Drug Check</span>
+        <span class="q-chip" data-msg="Suggest a heart-healthy meal plan">🥗 Meal Plan</span>
+        <span class="q-chip" data-msg="Early signs of high blood pressure?">❤️ Heart Risk</span>
+        <span class="q-chip" data-msg="Stress relief tips for today">🧘 Wellness</span>
+        <span class="q-chip" data-msg="How much water should I drink daily?">💧 Hydration</span>
+        <span class="q-chip" data-msg="Best foods for better sleep?">😴 Sleep</span>
+      </div>
+
+      <div class="input-box">
+        <input type="file" id="image-upload" accept="image/*" style="display:none">
+        <div class="img-preview-strip" id="img-preview-strip">
+          <div class="img-preview-thumb">
+            <img id="img-preview-img" src="" alt="Preview">
+            <button class="img-preview-remove" id="img-preview-remove" title="Remove image">✕</button>
+          </div>
+          <div class="img-preview-label">📷 Image attached<span>Wellpal AI will analyze this image</span></div>
+        </div>
+        <textarea
+          class="chat-ta"
+          id="chat-input"
+          placeholder="Ask Wellpal about your health…"
+          rows="1"
+        ></textarea>
+        <div class="input-btns">
+          <button class="attach-btn" id="attach-btn" title="Upload image for analysis">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <button class="send-btn" id="send-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <p class="input-hint">Wellpal provides general health information only — not a substitute for professional medical advice.</p>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  CONFIG — uses local server proxy
+// ═══════════════════════════════════════
+const PROXY_URL = '/api/chat';
+
+const SYSTEM_PROMPT_BASE = `You are Wellpal AI, a warm, knowledgeable health and wellness assistant. Help users with:
+- Medicine guidance and drug interaction checks
+- Personalised diet and nutrition planning
+- Heart disease risk awareness and prevention
+- Elderly health care tips
+- General wellness, stress, sleep, hydration, and fitness
+
+Rules:
+- Warm, clear, supportive tone always.
+- Use health emojis (💊🥗❤️🧘💧😴🌿) naturally.
+- Use **bold** for key terms. Use line breaks for readability.
+- Always remind users to consult a qualified doctor for personal decisions.
+- IMPORTANT: Always give COMPLETE, FULL responses. Never cut off mid-sentence or mid-list.
+- If the user asks for a multi-day plan (e.g. 7-day diet chart), provide ALL days in full detail in a single response.
+- For diet plans, meal plans, or exercise routines, include every day completely — do not stop partway.
+- Use structured formatting with headers, bullet points, and numbered lists for long responses.
+- Be thorough and detailed — users rely on complete information.`;
+
+let SYSTEM_PROMPT = SYSTEM_PROMPT_BASE; // will be enriched with user profile data
+
+// Chat history for multi-turn conversation (Gemini format)
+let chatHistory = [];
+let hasMessages  = false;
+let isBusy       = false;
+
+// ── Supabase session tracking ──
+let currentSessionId = null;
+let currentProfileId = null;
+
+function resetChat() {
+  chatHistory = [];
+  currentSessionId = null;
+}
+
+// Load profile from Supabase (by auth user if logged in)
+async function loadProfile() {
+  try {
+    const hasAuth = typeof WellpalAuth !== 'undefined';
+    const authId = hasAuth ? WellpalAuth.getUserId() : null;
+    
+    // If not logged in, just show default greeting
+    if (!authId) {
+      console.log('Chatbot: not logged in, using defaults');
+      return;
+    }
+
+    const res = await fetch('/api/profile?auth_id=' + authId);
+    const data = await res.json();
+    if (data && data.id && !data.error) {
+      currentProfileId = data.id;
+      const displayName = data.name || (hasAuth ? WellpalAuth.getUserName() : 'User');
+      const uname = document.querySelector('.sb-uname');
+      if (uname) uname.textContent = displayName;
+      const welcomeH2 = document.querySelector('.welcome h2');
+      if (welcomeH2) welcomeH2.textContent = 'Hello, ' + displayName.split(' ')[0] + ' 👋';
+      personalizeSystemPrompt(data);
+      console.log('Chatbot: profile loaded for', displayName);
+    } else if (hasAuth && WellpalAuth.isLoggedIn()) {
+      const name = WellpalAuth.getUserName();
+      const uname = document.querySelector('.sb-uname');
+      if (uname) uname.textContent = name;
+      const welcomeH2 = document.querySelector('.welcome h2');
+      if (welcomeH2) welcomeH2.textContent = 'Hello, ' + name.split(' ')[0] + ' 👋';
+    }
+  } catch (e) { console.log('Profile load:', e); }
+}
+
+// Enrich the AI system prompt with user's health data for personalization
+function personalizeSystemPrompt(profile) {
+  let context = '\n\n--- USER HEALTH PROFILE (use this to personalize your responses) ---';
+  if (profile.name) context += `\nName: ${profile.name}`;
+  if (profile.age) context += `\nAge: ${profile.age}`;
+  if (profile.gender && profile.gender !== 'Prefer not to say') context += `\nGender: ${profile.gender}`;
+  if (profile.height) context += `\nHeight: ${profile.height}`;
+  if (profile.weight) context += `\nWeight: ${profile.weight}`;
+  if (profile.blood_type && profile.blood_type !== 'Unknown') context += `\nBlood Type: ${profile.blood_type}`;
+  if (profile.allergies && profile.allergies.length > 0) context += `\nAllergies: ${profile.allergies.join(', ')} — IMPORTANT: Always consider these allergies when recommending medicines or food.`;
+  if (profile.location) context += `\nLocation: ${profile.location}`;
+  context += '\n--- END PROFILE ---';
+  context += '\nUse the above profile to give personalized health advice. Address the user by their first name. Consider their age, allergies, and health data in all recommendations.';
+  SYSTEM_PROMPT = SYSTEM_PROMPT_BASE + context;
+}
+
+// Load previous chat sessions into sidebar
+async function loadChatSessions() {
+  try {
+    const url = currentProfileId ? `/api/sessions?profile_id=${currentProfileId}` : '/api/sessions';
+    const res = await fetch(url);
+    const sessions = await res.json();
+    if (!Array.isArray(sessions)) return;
+
+    const recentLabel = document.querySelector('.sb-label');
+    if (!recentLabel) return;
+
+    // Remove old session items
+    let el = recentLabel.nextElementSibling;
+    while (el && !el.classList.contains('sb-label') && !el.classList.contains('sb-item[data-msg]')) {
+      const next = el.nextElementSibling;
+      if (el.classList.contains('sb-item') && !el.hasAttribute('data-msg')) {
+        el.remove();
+      } else {
+        break;
+      }
+      el = next;
+    }
+
+    // Insert session items after the "Recent" label
+    const modulesLabel = document.querySelectorAll('.sb-label')[1];
+    sessions.slice(0, 10).reverse().forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'sb-item';
+      item.dataset.sessionId = s.id;
+      const icon = s.title.includes('Drug') ? '💊' : s.title.includes('Meal') || s.title.includes('meal') ? '🥗' :
+                   s.title.includes('Heart') || s.title.includes('blood') ? '❤️' : s.title.includes('Stress') ? '🧘' :
+                   s.title.includes('Sleep') ? '😴' : '💬';
+      item.innerHTML = `<span class="sb-item-ico">${icon}</span> ${s.title}`;
+      item.addEventListener('click', () => loadSession(s.id));
+      if (modulesLabel) {
+        modulesLabel.parentNode.insertBefore(item, modulesLabel);
+      } else {
+        recentLabel.parentNode.appendChild(item);
+      }
+    });
+  } catch (e) { console.log('Sessions load:', e); }
+}
+
+// Load a specific session's messages
+async function loadSession(sessionId) {
+  try {
+    const res = await fetch(`/api/messages?session_id=${sessionId}`);
+    const msgs = await res.json();
+    if (!Array.isArray(msgs) || msgs.length === 0) return;
+
+    // Clear current chat
+    const wrap = msgsWrap();
+    [...wrap.children].forEach(c => { if (c.id !== 'welcome') c.remove(); });
+    welcomeEl().style.display = 'none';
+    chipsEl().style.display = 'none';
+
+    currentSessionId = sessionId;
+    chatHistory = [];
+    hasMessages = true;
+
+    showDateDivider();
+
+    msgs.forEach(m => {
+      chatHistory.push({ role: m.role, parts: [{ text: m.content }] });
+      const display = m.role === 'model' ? fmt(m.content) : m.content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      appendMsg(display, m.role === 'user' ? 'user' : 'ai');
+    });
+
+    // Highlight active session in sidebar
+    document.querySelectorAll('.sb-item').forEach(el => el.classList.remove('active-chat'));
+    const active = document.querySelector(`.sb-item[data-session-id="${sessionId}"]`);
+    if (active) active.classList.add('active-chat');
+
+  } catch (e) { console.log('Load session:', e); }
+}
+
+// Create a new session in Supabase
+async function createSession(firstMessage) {
+  try {
+    const title = firstMessage.length > 40 ? firstMessage.substring(0, 40) + '…' : firstMessage;
+    const body = { title, profile_id: currentProfileId };
+    const res = await fetch('/api/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data && data.id) {
+      currentSessionId = data.id;
+      loadChatSessions(); // refresh sidebar
+    }
+  } catch (e) { console.log('Create session:', e); }
+}
+
+// Save a message to Supabase
+async function saveMessage(role, content) {
+  if (!currentSessionId) return;
+  try {
+    await fetch('/api/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: currentSessionId, role, content })
+    });
+  } catch (e) { console.log('Save message:', e); }
+}
+
+async function callAI(userMessage, imageBase64, imageMime) {
+  // Build user parts — text + optional image
+  const userParts = [];
+  if (imageBase64 && imageMime) {
+    userParts.push({ inline_data: { mime_type: imageMime, data: imageBase64 } });
+  }
+  userParts.push({ text: userMessage });
+
+  // Add user message to history (text only for history to keep it light)
+  chatHistory.push({ role: 'user', parts: [{ text: userMessage }] });
+
+  // Create session on first message if needed
+  if (!currentSessionId) {
+    await createSession(userMessage);
+  }
+
+  // Save user message to Supabase
+  saveMessage('user', userMessage);
+
+  // Build contents — use history but replace last entry with full parts (including image)
+  const contentsForAPI = [...chatHistory];
+  contentsForAPI[contentsForAPI.length - 1] = { role: 'user', parts: userParts };
+
+  const requestBody = {
+    contents: contentsForAPI,
+  };
+
+  const response = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody)
+  });
+
+  // Validate response before parsing
+  const responseText = await response.text();
+  if (!responseText) {
+    chatHistory.pop();
+    throw new Error('Empty response from server. Please try again.');
+  }
+
+  let data;
+  try {
+    data = JSON.parse(responseText);
+  } catch (parseErr) {
+    chatHistory.pop();
+    throw new Error('Invalid response from server. Please try again.');
+  }
+
+  if (data.error) {
+    chatHistory.pop();
+    throw new Error(data.error);
+  }
+
+  const aiText = data.reply;
+  if (!aiText) {
+    chatHistory.pop();
+    throw new Error('No response received from the AI model.');
+  }
+
+  // Add AI response to history
+  chatHistory.push({ role: 'model', parts: [{ text: aiText }] });
+
+  // Save AI response to Supabase
+  saveMessage('model', aiText);
+
+  return aiText;
+}
+
+// ═══════════════════════════════════════
+//  DOM REFS (safe to grab after module loads)
+// ═══════════════════════════════════════
+const inputEl   = () => document.getElementById('chat-input');
+const sendBtn   = () => document.getElementById('send-btn');
+const msgsWrap  = () => document.getElementById('msgs-wrap');
+const welcomeEl = () => document.getElementById('welcome');
+const chipsEl   = () => document.getElementById('q-chips');
+
+// ─── IMAGE UPLOAD STATE ─────────────
+let pendingImageBase64 = null;
+let pendingImageMime = null;
+let pendingImageDataUrl = null;
+
+// ═══════════════════════════════════════
+//  MARKDOWN → HTML
+// ═══════════════════════════════════════
+function fmt(text) {
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,     '<em>$1</em>')
+    .replace(/^#{1,3}\s+(.+)$/gm, '<strong>$1</strong>')
+    .replace(/\n\n/g,'<br><br>')
+    .replace(/\n/g,'<br>');
+}
+
+// ═══════════════════════════════════════
+//  SEND MESSAGE
+// ═══════════════════════════════════════
+async function sendMessage(preset) {
+  if (isBusy) return;
+  const inp  = inputEl();
+  const text = (preset !== undefined ? preset : inp.value).trim();
+  if (!text && !pendingImageBase64) return;
+
+  const userText = text || '🖼️ Analyze this image';
+  const imageB64 = pendingImageBase64;
+  const imageMime = pendingImageMime;
+  const imageDataUrl = pendingImageDataUrl;
+
+  // Clear input & image
+  inp.value = ''; inp.style.height = 'auto';
+  clearPendingImage();
+
+  if (!hasMessages) { showDateDivider(); hasMessages = true; }
+
+  // Show user message (with image thumbnail if attached)
+  appendMsg(userText, 'user', imageDataUrl);
+  showTyping();
+  isBusy = true;
+  sendBtn().disabled = true;
+
+  try {
+    const aiText = await callAI(userText, imageB64, imageMime);
+    removeTyping();
+    appendMsg(fmt(aiText), 'ai');
+  } catch (err) {
+    removeTyping();
+    appendMsg(`⚠️ <strong>Error:</strong> ${err.message || 'Something went wrong.'}<br>Please try again.`, 'ai');
+  } finally {
+    isBusy = false;
+    sendBtn().disabled = false;
+    inp.focus();
+  }
+}
+
+// ═══════════════════════════════════════
+//  DOM HELPERS
+// ═══════════════════════════════════════
+function appendMsg(text, type, imageDataUrl) {
+  const wrap = msgsWrap();
+  const now  = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+  const isAI = type === 'ai';
+  const imgHtml = imageDataUrl ? `<img class="msg-image" src="${imageDataUrl}" alt="Uploaded image">` : '';
+  const row  = document.createElement('div');
+  row.className = 'msg-row' + (isAI ? '' : ' user');
+  row.innerHTML = `
+    <div class="msg-ava">${isAI ? '🌿' : '👤'}</div>
+    <div class="msg-body">
+      <div class="msg-name">${isAI ? 'Wellpal AI' : 'You'}</div>
+      ${imgHtml}
+      <div class="msg-bubble">${text}</div>
+      <div class="msg-time">${now}</div>
+      ${isAI ? `<div class="msg-actions">
+        <button class="act-btn copy-btn">📋 Copy</button>
+        <button class="act-btn">👍 Helpful</button>
+        <button class="act-btn">👎 Not helpful</button>
+      </div>` : ''}
+    </div>`;
+  // wire copy button inside the new element
+  const copyBtn = row.querySelector('.copy-btn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const txt = row.querySelector('.msg-bubble').innerText;
+      navigator.clipboard.writeText(txt).then(() => {
+        copyBtn.textContent = '✅ Copied!';
+        setTimeout(() => copyBtn.textContent = '📋 Copy', 1600);
+      });
+    });
+  }
+  wrap.appendChild(row);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function showTyping() {
+  const wrap = msgsWrap();
+  const row  = document.createElement('div');
+  row.className = 'typing-row'; row.id = 'typing-ind';
+  row.innerHTML = `<div class="msg-ava">🌿</div><div class="typing-bub"><span></span><span></span><span></span></div>`;
+  wrap.appendChild(row);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function removeTyping() {
+  document.getElementById('typing-ind')?.remove();
+}
+
+function showDateDivider() {
+  welcomeEl().style.display = 'none';
+  chipsEl().style.display   = 'none';
+  const wrap = msgsWrap();
+  const div  = document.createElement('div');
+  div.className = 'date-div';
+  div.innerHTML = `<span>Today · ${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})}</span>`;
+  wrap.appendChild(div);
+}
+
+function clearChat() {
+  const wrap = msgsWrap();
+  [...wrap.children].forEach(c => { if (c.id !== 'welcome') c.remove(); });
+  welcomeEl().style.display = '';
+  chipsEl().style.display   = '';
+  hasMessages = false; isBusy = false;
+  clearPendingImage();
+  resetChat(); // fresh conversation
+  sendBtn().disabled = false;
+  inputEl().focus();
+}
+
+// ═══════════════════════════════════════
+//  IMAGE UPLOAD HELPERS
+// ═══════════════════════════════════════
+function handleImageUpload(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  if (file.size > 10 * 1024 * 1024) {
+    alert('Image too large. Please use an image under 10MB.');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    // Extract base64 and mime
+    const [header, base64Data] = dataUrl.split(',');
+    const mimeMatch = header.match(/data:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : file.type;
+
+    pendingImageBase64 = base64Data;
+    pendingImageMime = mime;
+    pendingImageDataUrl = dataUrl;
+
+    // Show preview
+    document.getElementById('img-preview-img').src = dataUrl;
+    document.getElementById('img-preview-strip').classList.add('active');
+    document.getElementById('attach-btn').classList.add('has-image');
+    inputEl().placeholder = 'Ask about this image, or just send to analyze…';
+    inputEl().focus();
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearPendingImage() {
+  pendingImageBase64 = null;
+  pendingImageMime = null;
+  pendingImageDataUrl = null;
+  document.getElementById('img-preview-strip').classList.remove('active');
+  document.getElementById('attach-btn').classList.remove('has-image');
+  document.getElementById('image-upload').value = '';
+  inputEl().placeholder = 'Ask Wellpal about your health…';
+}
+
+// ═══════════════════════════════════════
+//  WIRE UP ALL EVENTS (after DOM is ready)
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+
+  // Load profile & chat sessions from Supabase
+  loadProfile().then(() => {
+    loadChatSessions();
+    // Check if we should load a specific session (from profile page link)
+    const params = new URLSearchParams(window.location.search);
+    const sessionParam = params.get('session');
+    if (sessionParam) {
+      loadSession(sessionParam);
+    }
+
+    // Check if we have a pre-filled message from Quick Access popup
+    const msgParam = params.get('msg');
+    if (msgParam && !sessionParam) {
+      setTimeout(() => {
+        inputEl().value = msgParam;
+        sendMessage();
+      }, 500);
+    }
+  });
+
+  // Send button
+  sendBtn().addEventListener('click', () => sendMessage());
+
+  // Image upload — attach button triggers file picker
+  document.getElementById('attach-btn').addEventListener('click', () => {
+    document.getElementById('image-upload').click();
+  });
+  document.getElementById('image-upload').addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) handleImageUpload(e.target.files[0]);
+  });
+  document.getElementById('img-preview-remove').addEventListener('click', clearPendingImage);
+
+  // Drag & drop images onto input area
+  const inputBox = document.querySelector('.input-box');
+  inputBox.addEventListener('dragover', (e) => { e.preventDefault(); inputBox.style.borderColor = 'var(--mint-mid)'; });
+  inputBox.addEventListener('dragleave', () => { inputBox.style.borderColor = ''; });
+  inputBox.addEventListener('drop', (e) => {
+    e.preventDefault(); inputBox.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) handleImageUpload(file);
+  });
+
+  // Paste images from clipboard
+  inputEl().addEventListener('paste', (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        handleImageUpload(item.getAsFile());
+        return;
+      }
+    }
+  });
+
+  // Textarea — Enter to send, Shift+Enter for newline; auto-resize
+  inputEl().addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+  inputEl().addEventListener('input', e => {
+    e.target.style.height = 'auto';
+    e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px';
+  });
+
+  // New chat / clear buttons
+  document.getElementById('new-chat-btn').addEventListener('click', clearChat);
+  document.getElementById('btn-clear').addEventListener('click', clearChat);
+  document.getElementById('btn-new').addEventListener('click', clearChat);
+
+  // Home button
+  document.getElementById('btn-home').addEventListener('click', () => {
+    window.location.href = 'wellpal-v5-updated (2).html';
+  });
+
+  // Mobile sidebar
+  document.getElementById('hamburger-btn').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sb-overlay').classList.toggle('show');
+  });
+  document.getElementById('sb-overlay').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sb-overlay').classList.remove('show');
+  });
+
+  // Suggestion cards (data-msg)
+  document.querySelectorAll('.sug-card[data-msg]').forEach(el => {
+    el.addEventListener('click', () => sendMessage(el.dataset.msg));
+  });
+
+  // Quick chips (data-msg)
+  document.querySelectorAll('.q-chip[data-msg]').forEach(el => {
+    el.addEventListener('click', () => sendMessage(el.dataset.msg));
+  });
+
+  // Sidebar module items (data-msg)
+  document.querySelectorAll('.sb-item[data-msg]').forEach(el => {
+    el.addEventListener('click', () => sendMessage(el.dataset.msg));
+  });
+
+  // Auto-focus input
+  inputEl().focus();
+
+  // Show logout button if logged in
+  if (typeof WellpalAuth !== 'undefined' && WellpalAuth.isLoggedIn()) {
+    const logoutBtn = document.getElementById('sb-logout');
+    if (logoutBtn) logoutBtn.style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>
