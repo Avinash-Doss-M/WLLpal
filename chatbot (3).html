@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wellpal AI Chat</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+/* ─── TOKENS ─────────────────────────── */
+:root {
+  --mint:       #C8F5E1;
+  --mint-mid:   #7EDCB0;
+  --green-deep: #1A6B4A;
+  --green-dark: #0D3D2B;
+  --green-btn:  #1e7a56;
+  --cream:      #F9F5EE;
+  --warm-white: #FEFCF8;
+  --charcoal:   #1C1C1E;
+  --text-body:  #3A3A3C;
+  --coral:      #FF7F6B;
+  --sidebar-bg: #091f14;
+  --sidebar-w:  264px;
+  --input-r:    20px;
+}
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--sidebar-bg);
+  color: var(--text-body);
+}
+
+/* noise grain */
+body::after {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* ─── APP SHELL ─────────────────────── */
+.app {
+  display: flex;
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════ */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+  border-right: 1px solid rgba(126,220,176,0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+
+/* logo */
+.sb-logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 22px 18px 18px;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(126,220,176,0.08);
+}
+.sb-logo-icon {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--mint-mid), var(--green-deep));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(26,107,74,0.4);
+}
+.sb-logo-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.3rem; color: white; letter-spacing: -0.01em;
+}
+
+/* new chat */
+.new-chat-btn {
+  display: flex; align-items: center; gap: 8px;
+  margin: 14px 12px 6px;
+  padding: 10px 14px;
+  background: rgba(126,220,176,0.08);
+  border: 1px solid rgba(126,220,176,0.18);
+  border-radius: 11px;
+  color: var(--mint);
+  font-size: 0.84rem; font-weight: 600;
+  cursor: pointer; transition: all 0.18s;
+  font-family: 'DM Sans', sans-serif;
+  width: calc(100% - 24px);
+}
+.new-chat-btn:hover {
+  background: rgba(126,220,176,0.16);
+  border-color: rgba(126,220,176,0.35);
+}
+
+/* scrollable area */
+.sb-scroll {
+  flex: 1; overflow-y: auto; padding: 4px 6px;
+}
+.sb-scroll::-webkit-scrollbar { width: 3px; }
+.sb-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+
+/* labels */
+.sb-label {
+  font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.22);
+  padding: 14px 12px 5px;
+}
+
+/* history + module items */
+.sb-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 12px; border-radius: 9px;
+  color: rgba(255,255,255,0.45);
+  font-size: 0.8rem; cursor: pointer;
+  transition: all 0.14s;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sb-item:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.82); }
+.sb-item.active-chat {
+  background: rgba(126,220,176,0.11);
+  color: var(--mint-mid);
+}
+.sb-item-ico { font-size: 0.82rem; flex-shrink: 0; }
+
+/* footer */
+.sb-footer {
+  padding: 10px 12px 14px;
+  border-top: 1px solid rgba(126,220,176,0.08);
+}
+.sb-back {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px; border-radius: 9px;
+  color: rgba(255,255,255,0.38); font-size: 0.8rem;
+  cursor: pointer; text-decoration: none;
+  transition: all 0.14s; margin-bottom: 4px;
+}
+.sb-back:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.75); }
+.sb-user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 10px;
+  cursor: pointer; transition: background 0.15s;
+}
+.sb-user:hover { background: rgba(255,255,255,0.05); }
+.sb-avatar {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--mint-mid), var(--green-deep));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.88rem; flex-shrink: 0;
+}
+.sb-uname { font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.76); }
+.sb-uplan { font-size: 0.67rem; color: rgba(255,255,255,0.28); margin-top: 1px; }
+
+/* ═══════════════════════════════════════
+   MAIN PANEL
+═══════════════════════════════════════ */
+.chat-main {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
+  background: var(--warm-white);
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── TOPBAR ─────────────────────────── */
+.topbar {
+  height: 58px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 22px;
+  background: white;
+  border-bottom: 1px solid rgba(126,220,176,0.13);
+  box-shadow: 0 1px 12px rgba(26,107,74,0.05);
+  z-index: 10;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.hamburger {
+  display: none; background: none; border: none;
+  color: var(--green-deep); font-size: 1.1rem;
+  cursor: pointer; padding: 6px; border-radius: 8px;
+  transition: background 0.15s;
+}
+.hamburger:hover { background: rgba(200,245,225,0.35); }
+.topbar-bot { display: flex; align-items: center; gap: 10px; }
+.topbar-bot-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--mint-mid), var(--green-deep));
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  box-shadow: 0 3px 10px rgba(26,107,74,0.2);
+}
+.topbar-bot-name { font-size: 0.92rem; font-weight: 700; color: var(--charcoal); }
+.topbar-bot-status {
+  font-size: 0.7rem; color: #34C759;
+  display: flex; align-items: center; gap: 5px;
+}
+.status-dot {
+  width: 6px; height: 6px; background: #34C759;
+  border-radius: 50%;
+  animation: pulse-g 2s ease-in-out infinite;
+}
+@keyframes pulse-g {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:0.45; transform:scale(1.4); }
+}
+.topbar-actions { display: flex; gap: 7px; }
+.topbar-btn {
+  width: 34px; height: 34px;
+  background: var(--cream);
+  border: 1.5px solid rgba(126,220,176,0.25);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 0.88rem;
+  transition: all 0.16s; color: var(--text-body);
+}
+.topbar-btn:hover { border-color: var(--green-deep); background: rgba(200,245,225,0.3); }
+
+/* ── MESSAGES SCROLL ────────────────── */
+.msgs-wrap {
+  flex: 1; overflow-y: auto;
+  padding: 24px 0 8px;
+  display: flex; flex-direction: column;
+}
+.msgs-wrap::-webkit-scrollbar { width: 5px; }
+.msgs-wrap::-webkit-scrollbar-thumb { background: rgba(126,220,176,0.28); border-radius: 4px; }
+
+/* ── WELCOME STATE ─────────────────── */
+.welcome {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 32px 24px 16px; text-align: center;
+  animation: rise 0.55s cubic-bezier(.2,.8,.4,1) both;
+}
+@keyframes rise {
+  from { opacity:0; transform:translateY(22px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.welcome-orb {
+  width: 76px; height: 76px;
+  background: linear-gradient(135deg, var(--mint-mid), var(--green-deep));
+  border-radius: 24px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem; margin-bottom: 22px;
+  box-shadow: 0 12px 40px rgba(26,107,74,0.28);
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform:translateY(0) rotate(-1deg); }
+  50%      { transform:translateY(-9px) rotate(1deg); }
+}
+.welcome h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 2rem; color: var(--charcoal);
+  margin-bottom: 10px; letter-spacing: -0.02em;
+}
+.welcome p {
+  font-size: 0.95rem; color: var(--text-body);
+  opacity: 0.55; max-width: 400px;
+  line-height: 1.68; margin-bottom: 36px;
+}
+
+/* suggestion cards */
+.sug-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 11px; width: 100%; max-width: 580px;
+}
+.sug-card {
+  background: white;
+  border: 1.5px solid rgba(126,220,176,0.18);
+  border-radius: 15px; padding: 16px 17px;
+  cursor: pointer; text-align: left;
+  transition: all 0.2s;
+  animation: rise 0.55s cubic-bezier(.2,.8,.4,1) both;
+}
+.sug-card:nth-child(1){animation-delay:0.08s}
+.sug-card:nth-child(2){animation-delay:0.13s}
+.sug-card:nth-child(3){animation-delay:0.18s}
+.sug-card:nth-child(4){animation-delay:0.23s}
+.sug-card:hover {
+  border-color: var(--mint-mid);
+  background: rgba(200,245,225,0.14);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 26px rgba(26,107,74,0.1);
+}
+.sug-ico  { font-size: 1.25rem; margin-bottom: 7px; }
+.sug-t    { font-size: 0.84rem; font-weight: 600; color: var(--charcoal); }
+.sug-sub  { font-size: 0.74rem; color: var(--text-body); opacity: 0.5; margin-top: 3px; line-height: 1.4; }
+
+/* ── DATE DIVIDER ─────────────────── */
+.date-div {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 28px 4px;
+}
+.date-div::before, .date-div::after {
+  content:''; flex:1; height:1px;
+  background: rgba(126,220,176,0.18);
+}
+.date-div span {
+  font-size: 0.68rem; color: var(--text-body);
+  opacity: 0.35; font-weight: 600;
+  letter-spacing: 0.05em; white-space: nowrap;
+}
+
+/* ── MESSAGE ROWS ─────────────────── */
+.msg-row {
+  display: flex; gap: 13px;
+  padding: 5px 28px;
+  animation: rise 0.28s ease both;
+}
+.msg-row.user { flex-direction: row-reverse; }
+
+.msg-ava {
+  width: 34px; height: 34px; flex-shrink: 0;
+  border-radius: 11px; margin-top: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  background: linear-gradient(135deg, var(--mint-mid), var(--green-deep));
+}
+.msg-row.user .msg-ava { background: var(--coral); color: white; }
+
+.msg-body   { max-width: 68%; display:flex; flex-direction:column; gap:4px; }
+.user .msg-body { align-items: flex-end; }
+.msg-name   { font-size: 0.69rem; font-weight: 700; color: var(--text-body); opacity:0.38; }
+.msg-bubble {
+  padding: 12px 17px; line-height: 1.65;
+  font-size: 0.9rem; word-break: break-word;
+  background: white;
+  border: 1px solid rgba(126,220,176,0.18);
+  border-radius: 18px 18px 18px 4px;
+  color: var(--text-body);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.user .msg-bubble {
+  background: var(--green-deep); color: white;
+  border: none;
+  border-radius: 18px 18px 4px 18px;
+  box-shadow: 0 4px 18px rgba(26,107,74,0.28);
+}
+.msg-time { font-size: 0.66rem; opacity: 0.28; }
+
+/* hover actions on AI messages */
+.msg-actions {
+  display: flex; gap: 5px; margin-top: 3px;
+  opacity: 0; transition: opacity 0.16s;
+}
+.msg-row:hover .msg-actions { opacity: 1; }
+.act-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 0.72rem; color: var(--green-deep);
+  padding: 3px 8px; border-radius: 6px;
+  opacity: 0.55; transition: all 0.14s;
+  font-family: 'DM Sans', sans-serif;
+}
+.act-btn:hover { opacity: 1; background: rgba(200,245,225,0.45); }
+
+/* ── TYPING INDICATOR ──────────────── */
+.typing-row {
+  display: flex; gap: 13px;
+  padding: 5px 28px;
+  animation: rise 0.25s ease both;
+}
+.typing-bub {
+  display: flex; gap: 5px; align-items: center;
+  padding: 13px 17px;
+  background: white;
+  border: 1px solid rgba(126,220,176,0.18);
+  border-radius: 18px 18px 18px 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.typing-bub span {
+  width: 7px; height: 7px;
+  background: var(--mint-mid); border-radius: 50%;
+  animation: bounce 1.3s ease-in-out infinite;
+}
+.typing-bub span:nth-child(2) { animation-delay: 0.17s; }
+.typing-bub span:nth-child(3) { animation-delay: 0.34s; }
+@keyframes bounce {
+  0%,60%,100% { transform: translateY(0); }
+  30%          { transform: translateY(-8px); }
+}
+
+/* ═══════════════════════════════════════
+   INPUT ZONE
+═══════════════════════════════════════ */
+.input-zone {
+  flex-shrink: 0;
+  padding: 10px 28px 18px;
+  background: var(--warm-white);
+}
+
+/* quick chips */
+.q-chips {
+  display: flex; gap: 7px; flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.q-chip {
+  background: rgba(200,245,225,0.36);
+  border: 1px solid rgba(126,220,176,0.34);
+  color: var(--green-deep);
+  padding: 5px 13px; border-radius: 100px;
+  font-size: 0.74rem; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+  transition: all 0.15s;
+}
+.q-chip:hover { background: var(--mint-mid); color: white; border-color: var(--mint-mid); }
+
+/* the input box itself */
+.input-box {
+  display: flex; align-items: flex-end; gap: 10px;
+  background: white;
+  border: 1.5px solid rgba(126,220,176,0.3);
+  border-radius: var(--input-r);
+  padding: 10px 12px 10px 18px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 14px rgba(26,107,74,0.06);
+}
+.input-box:focus-within {
+  border-color: var(--mint-mid);
+  box-shadow: 0 4px 24px rgba(26,107,74,0.13);
+}
+.chat-ta {
+  flex: 1; background: none; border: none; outline: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem; color: var(--charcoal);
+  resize: none; max-height: 160px;
+  line-height: 1.55; padding: 4px 0;
+}
+.chat-ta::placeholder { color: #bdbdbd; }
+
+.input-btns { display: flex; align-items: flex-end; gap: 7px; flex-shrink: 0; }
+
+.attach-btn {
+  width: 36px; height: 36px;
+  background: none; border: 1.5px solid rgba(126,220,176,0.26);
+  border-radius: 10px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--green-deep); opacity: 0.5;
+  transition: all 0.16s;
+}
+.attach-btn:hover { opacity: 1; border-color: var(--mint-mid); background: rgba(200,245,225,0.22); }
+
+.send-btn {
+  width: 40px; height: 40px; flex-shrink: 0;
+  background: var(--green-deep); border: none;
+  border-radius: 12px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+  transition: all 0.18s;
+  box-shadow: 0 4px 14px rgba(26,107,74,0.32);
+}
+.send-btn:hover:not(:disabled) { background: var(--green-btn); transform: scale(1.07); box-shadow: 0 6px 20px rgba(26,107,74,0.4); }
+.send-btn:disabled { background: #d0d0d0; box-shadow: none; cursor: not-allowed; }
+
+.input-hint {
+  text-align: center; font-size: 0.68rem;
+  color: var(--text-body); opacity: 0.27;
+  margin-top: 9px; line-height: 1.4;
+}
+
+/* ─── MOBILE OVERLAY ─────────────────── */
+.sb-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45); z-index: 90;
+}
+
+/* ─── RESPONSIVE ─────────────────────── */
+@media (max-width: 800px) {
+  .sidebar {
+    position: fixed; top:0; left:0; bottom:0;
+    z-index: 100; transform: translateX(-100%);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sb-overlay.show { display: block; }
+  .hamburger { display: flex; align-items: center; justify-content: center; }
+  .msg-body { max-width: 84%; }
+  .sug-grid { grid-template-columns: 1fr; }
+  .msg-row, .typing-row { padding: 5px 16px; }
+  .input-zone { padding: 8px 14px 16px; }
+  .date-div { padding: 8px 16px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ══════ SIDEBAR ══════ -->
+  <aside class="sidebar" id="sidebar">
+
+    <a href="wellpal-v5-updated.html" class="sb-logo">
+      <div class="sb-logo-icon">🌿</div>
+      <span class="sb-logo-name">Wellpal</span>
+    </a>
+
+    <button class="new-chat-btn" id="new-chat-btn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New conversation
+    </button>
+
+    <div class="sb-scroll">
+      <div class="sb-label">Recent</div>
+      <div class="sb-item active-chat"><span class="sb-item-ico">💊</span> Drug interaction check</div>
+      <div class="sb-item"><span class="sb-item-ico">🥗</span> Heart-healthy meal plan</div>
+      <div class="sb-item"><span class="sb-item-ico">❤️</span> Blood pressure concerns</div>
+      <div class="sb-item"><span class="sb-item-ico">🧘</span> Stress management tips</div>
+      <div class="sb-item"><span class="sb-item-ico">😴</span> Sleep improvement advice</div>
+      <div class="sb-item"><span class="sb-item-ico">🏃</span> Exercise routine guidance</div>
+
+      <div class="sb-label" style="margin-top:12px;">Modules</div>
+      <div class="sb-item" data-msg="Check for any drug interactions with my current medications"><span class="sb-item-ico">💊</span> Medicine Check</div>
+      <div class="sb-item" data-msg="Create a personalized heart-healthy 7-day meal plan for me"><span class="sb-item-ico">🥗</span> Diet Planner</div>
+      <div class="sb-item" data-msg="Assess my heart disease risk factors and give advice"><span class="sb-item-ico">❤️</span> Heart Risk</div>
+      <div class="sb-item" data-msg="Give me a complete daily wellness and fitness routine"><span class="sb-item-ico">🌿</span> Wellness Guide</div>
+      <div class="sb-item" data-msg="How can I improve my sleep quality naturally?"><span class="sb-item-ico">😴</span> Sleep Advisor</div>
+      <div class="sb-item" data-msg="How can I manage stress and anxiety naturally?"><span class="sb-item-ico">🧘</span> Mental Wellness</div>
+    </div>
+
+    <div class="sb-footer">
+      <a href="wellpal-v5-updated.html" class="sb-back">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back to Wellpal
+      </a>
+      <div class="sb-user">
+        <div class="sb-avatar">👤</div>
+        <div>
+          <div class="sb-uname">Arjun Mehta</div>
+          <div class="sb-uplan">Premium · Wellpal</div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- mobile overlay -->
+  <div class="sb-overlay" id="sb-overlay"></div>
+
+  <!-- ══════ MAIN ══════ -->
+  <main class="chat-main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburger-btn">☰</button>
+        <div class="topbar-bot">
+          <div class="topbar-bot-icon">🌿</div>
+          <div>
+            <div class="topbar-bot-name">Wellpal AI</div>
+            <div class="topbar-bot-status"><span class="status-dot"></span>Online · Health &amp; Wellness</div>
+          </div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="topbar-btn" id="btn-clear" title="Clear chat">🗑️</button>
+        <button class="topbar-btn" id="btn-new" title="New chat">✏️</button>
+        <button class="topbar-btn" id="btn-home" title="Back to home">🏠</button>
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="msgs-wrap" id="msgs-wrap">
+
+      <!-- Welcome (hidden after first message) -->
+      <div class="welcome" id="welcome">
+        <div class="welcome-orb">🌿</div>
+        <h2>Hello, Arjun 👋</h2>
+        <p>I'm Wellpal AI, your intelligent health companion. Ask me anything about medicines, nutrition, heart health, or your wellness journey.</p>
+        <div class="sug-grid">
+          <div class="sug-card" data-msg="Can I take Ibuprofen with blood pressure medication?">
+            <div class="sug-ico">💊</div>
+            <div class="sug-t">Drug interaction check</div>
+            <div class="sug-sub">Is Ibuprofen safe with BP meds?</div>
+          </div>
+          <div class="sug-card" data-msg="Suggest a 7-day heart-healthy meal plan">
+            <div class="sug-ico">🥗</div>
+            <div class="sug-t">Heart-healthy meal plan</div>
+            <div class="sug-sub">Personalised 7-day diet plan</div>
+          </div>
+          <div class="sug-card" data-msg="What are the early signs of high blood pressure?">
+            <div class="sug-ico">❤️</div>
+            <div class="sug-t">Heart disease warning signs</div>
+            <div class="sug-sub">Understand early risk indicators</div>
+          </div>
+          <div class="sug-card" data-msg="Give me evidence-based stress relief tips for today">
+            <div class="sug-ico">🧘</div>
+            <div class="sug-t">Stress &amp; wellness tips</div>
+            <div class="sug-sub">Science-backed daily guidance</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /msgs-wrap -->
+
+    <!-- INPUT ZONE -->
+    <div class="input-zone">
+      <div class="q-chips" id="q-chips">
+        <span class="q-chip" data-msg="Can I take Ibuprofen with BP medication?">💊 Drug Check</span>
+        <span class="q-chip" data-msg="Suggest a heart-healthy meal plan">🥗 Meal Plan</span>
+        <span class="q-chip" data-msg="Early signs of high blood pressure?">❤️ Heart Risk</span>
+        <span class="q-chip" data-msg="Stress relief tips for today">🧘 Wellness</span>
+        <span class="q-chip" data-msg="How much water should I drink daily?">💧 Hydration</span>
+        <span class="q-chip" data-msg="Best foods for better sleep?">😴 Sleep</span>
+      </div>
+
+      <div class="input-box">
+        <textarea
+          class="chat-ta"
+          id="chat-input"
+          placeholder="Ask Wellpal about your health…"
+          rows="1"
+        ></textarea>
+        <div class="input-btns">
+          <button class="attach-btn" title="Attach (coming soon)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <button class="send-btn" id="send-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <p class="input-hint">Wellpal provides general health information only — not a substitute for professional medical advice.</p>
+    </div>
+
+  </main>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "@google/generative-ai": "https://esm.run/@google/generative-ai"
+  }
+}
+</script>
+<script type="module">
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// ═══════════════════════════════════════
+//  CONFIG & GEMINI INIT
+// ═══════════════════════════════════════
+const API_KEY = 'AIzaSyD8I3w3GWhfzjA7AMeUycWFIxuZOnU3liI';
+
+const SYSTEM_PROMPT = `You are Wellpal AI, a warm, knowledgeable health and wellness assistant. Help users with:
+- Medicine guidance and drug interaction checks
+- Personalised diet and nutrition planning
+- Heart disease risk awareness and prevention
+- Elderly health care tips
+- General wellness, stress, sleep, hydration, and fitness
+
+Rules:
+- Warm, clear, supportive tone always.
+- Use health emojis (💊🥗❤️🧘💧😴🌿) naturally.
+- Use **bold** for key terms. Use line breaks for readability.
+- Always remind users to consult a qualified doctor for personal decisions.
+- Keep answers 100–250 words. Be evidence-based.`;
+
+const genAI = new GoogleGenerativeAI(API_KEY);
+
+function createChatSession() {
+  return genAI.getGenerativeModel({
+    model: 'gemini-2.0-flash',
+    systemInstruction: SYSTEM_PROMPT,
+  }).startChat({
+    history: [],
+    generationConfig: { maxOutputTokens: 600, temperature: 0.75 },
+  });
+}
+
+let chat       = createChatSession();
+let hasMessages = false;
+let isBusy      = false;
+
+// ═══════════════════════════════════════
+//  DOM REFS (safe to grab after module loads)
+// ═══════════════════════════════════════
+const inputEl   = () => document.getElementById('chat-input');
+const sendBtn   = () => document.getElementById('send-btn');
+const msgsWrap  = () => document.getElementById('msgs-wrap');
+const welcomeEl = () => document.getElementById('welcome');
+const chipsEl   = () => document.getElementById('q-chips');
+
+// ═══════════════════════════════════════
+//  MARKDOWN → HTML
+// ═══════════════════════════════════════
+function fmt(text) {
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,     '<em>$1</em>')
+    .replace(/^#{1,3}\s+(.+)$/gm, '<strong>$1</strong>')
+    .replace(/\n\n/g,'<br><br>')
+    .replace(/\n/g,'<br>');
+}
+
+// ═══════════════════════════════════════
+//  SEND MESSAGE
+// ═══════════════════════════════════════
+async function sendMessage(preset) {
+  if (isBusy) return;
+  const inp  = inputEl();
+  const text = (preset !== undefined ? preset : inp.value).trim();
+  if (!text) return;
+
+  inp.value = ''; inp.style.height = 'auto';
+
+  if (!hasMessages) { showDateDivider(); hasMessages = true; }
+
+  appendMsg(text, 'user');
+  showTyping();
+  isBusy = true;
+  sendBtn().disabled = true;
+
+  try {
+    const result = await chat.sendMessage(text);
+    removeTyping();
+    appendMsg(fmt(result.response.text()), 'ai');
+  } catch (err) {
+    removeTyping();
+    appendMsg(`⚠️ <strong>Error:</strong> ${err.message || 'Something went wrong.'}<br>Please try again.`, 'ai');
+  } finally {
+    isBusy = false;
+    sendBtn().disabled = false;
+    inp.focus();
+  }
+}
+
+// ═══════════════════════════════════════
+//  DOM HELPERS
+// ═══════════════════════════════════════
+function appendMsg(text, type) {
+  const wrap = msgsWrap();
+  const now  = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+  const isAI = type === 'ai';
+  const row  = document.createElement('div');
+  row.className = 'msg-row' + (isAI ? '' : ' user');
+  row.innerHTML = `
+    <div class="msg-ava">${isAI ? '🌿' : '👤'}</div>
+    <div class="msg-body">
+      <div class="msg-name">${isAI ? 'Wellpal AI' : 'You'}</div>
+      <div class="msg-bubble">${text}</div>
+      <div class="msg-time">${now}</div>
+      ${isAI ? `<div class="msg-actions">
+        <button class="act-btn copy-btn">📋 Copy</button>
+        <button class="act-btn">👍 Helpful</button>
+        <button class="act-btn">👎 Not helpful</button>
+      </div>` : ''}
+    </div>`;
+  // wire copy button inside the new element
+  const copyBtn = row.querySelector('.copy-btn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const txt = row.querySelector('.msg-bubble').innerText;
+      navigator.clipboard.writeText(txt).then(() => {
+        copyBtn.textContent = '✅ Copied!';
+        setTimeout(() => copyBtn.textContent = '📋 Copy', 1600);
+      });
+    });
+  }
+  wrap.appendChild(row);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function showTyping() {
+  const wrap = msgsWrap();
+  const row  = document.createElement('div');
+  row.className = 'typing-row'; row.id = 'typing-ind';
+  row.innerHTML = `<div class="msg-ava">🌿</div><div class="typing-bub"><span></span><span></span><span></span></div>`;
+  wrap.appendChild(row);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function removeTyping() {
+  document.getElementById('typing-ind')?.remove();
+}
+
+function showDateDivider() {
+  welcomeEl().style.display = 'none';
+  chipsEl().style.display   = 'none';
+  const wrap = msgsWrap();
+  const div  = document.createElement('div');
+  div.className = 'date-div';
+  div.innerHTML = `<span>Today · ${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})}</span>`;
+  wrap.appendChild(div);
+}
+
+function clearChat() {
+  const wrap = msgsWrap();
+  [...wrap.children].forEach(c => { if (c.id !== 'welcome') c.remove(); });
+  welcomeEl().style.display = '';
+  chipsEl().style.display   = '';
+  hasMessages = false; isBusy = false;
+  chat = createChatSession(); // fresh Gemini session
+  sendBtn().disabled = false;
+  inputEl().focus();
+}
+
+// ═══════════════════════════════════════
+//  WIRE UP ALL EVENTS (after DOM is ready)
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+
+  // Send button
+  sendBtn().addEventListener('click', () => sendMessage());
+
+  // Textarea — Enter to send, Shift+Enter for newline; auto-resize
+  inputEl().addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+  inputEl().addEventListener('input', e => {
+    e.target.style.height = 'auto';
+    e.target.style.height = Math.min(e.target.scrollHeight, 160) + 'px';
+  });
+
+  // New chat / clear buttons
+  document.getElementById('new-chat-btn').addEventListener('click', clearChat);
+  document.getElementById('btn-clear').addEventListener('click', clearChat);
+  document.getElementById('btn-new').addEventListener('click', clearChat);
+
+  // Home button
+  document.getElementById('btn-home').addEventListener('click', () => {
+    window.location.href = 'wellpal-v5-updated.html';
+  });
+
+  // Mobile sidebar
+  document.getElementById('hamburger-btn').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sb-overlay').classList.toggle('show');
+  });
+  document.getElementById('sb-overlay').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sb-overlay').classList.remove('show');
+  });
+
+  // Suggestion cards (data-msg)
+  document.querySelectorAll('.sug-card[data-msg]').forEach(el => {
+    el.addEventListener('click', () => sendMessage(el.dataset.msg));
+  });
+
+  // Quick chips (data-msg)
+  document.querySelectorAll('.q-chip[data-msg]').forEach(el => {
+    el.addEventListener('click', () => sendMessage(el.dataset.msg));
+  });
+
+  // Sidebar module items (data-msg)
+  document.querySelectorAll('.sb-item[data-msg]').forEach(el => {
+    el.addEventListener('click', () => sendMessage(el.dataset.msg));
+  });
+
+  // Auto-focus input
+  inputEl().focus();
+});
+</script>
+</body>
+</html>
