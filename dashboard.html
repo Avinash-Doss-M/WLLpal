@@ -613,8 +613,6 @@ footer p{font-size:0.82rem;color:rgba(255,255,255,0.38);}
 </div>
 
 <script>
-
-<script>
 // ── PAGE SWITCHER ──
 function showPage(name) {
   const map = {home:'home',profile:'profile',dashboard:'dashboard',chatbot:'chatbot'};
@@ -995,6 +993,57 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// ── DASHBOARD INIT — fetch user profile and personalize ──
+document.addEventListener('DOMContentLoaded', async () => {
+  const dashWelcome = document.getElementById('dash-welcome-text');
+  if (!dashWelcome) return; // only runs on dashboard page
+
+  const hasAuth = typeof WellpalAuth !== 'undefined';
+  const isLoggedIn = hasAuth && WellpalAuth.isLoggedIn();
+
+  // Update nav profile button
+  if (isLoggedIn) {
+    const navProfileBtn = document.querySelector('.nav-profile-btn');
+    if (navProfileBtn) {
+      const name = WellpalAuth.getUserName();
+      navProfileBtn.textContent = name.charAt(0).toUpperCase();
+      navProfileBtn.title = name;
+    }
+  }
+
+  if (!isLoggedIn) {
+    dashWelcome.textContent = 'Welcome, Guest 👋 Sign in to see your personalized dashboard';
+    return;
+  }
+
+  // Fetch profile from DB
+  const authId = WellpalAuth.getUserId();
+  if (!authId) return;
+
+  try {
+    const res = await fetch('/api/profile?auth_id=' + authId);
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error('Dashboard: non-JSON profile response:', text.substring(0, 200));
+      return;
+    }
+
+    if (data && data.name && !data.error) {
+      dashWelcome.textContent = `Welcome back, ${data.name} 👋 Here's your health overview`;
+    } else {
+      const fallbackName = WellpalAuth.getUserName();
+      dashWelcome.textContent = `Welcome back, ${fallbackName} 👋 Here's your health overview`;
+    }
+  } catch (e) {
+    console.log('Dashboard profile load error:', e);
+    const fallbackName = WellpalAuth.getUserName();
+    dashWelcome.textContent = `Welcome back, ${fallbackName} 👋 Here's your health overview`;
+  }
+});
+
 
 
 // ── STATS COUNT-UP ANIMATION ──
@@ -1061,10 +1110,6 @@ window.addEventListener('load', () => {
     </div>
   `).join('');
 });
-</script>
-</body>
-</html>
-
 </script>
 </body>
 </html>

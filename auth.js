@@ -120,7 +120,9 @@ const WellpalAuth = {
     if (!authId) return null;
     try {
       const res = await fetch(`/api/profile?auth_id=${authId}`);
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch { console.error('loadProfile: non-JSON response'); return null; }
       if (data && data.id && !data.error) return data;
     } catch(e) { console.log('Profile load:', e); }
     return null;
