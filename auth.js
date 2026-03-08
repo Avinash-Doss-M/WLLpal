@@ -60,7 +60,14 @@ const WellpalAuth = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, name })
     });
-    const data = await res.json();
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error('signup() non-JSON response:', res.status, text.substring(0, 500));
+      throw new Error(`Server returned an unexpected response (${res.status}). Please try again later.`);
+    }
     console.log('signup() raw response:', res.status, JSON.stringify(data).substring(0, 300));
     if (!res.ok || data.error) throw new Error(data.error || data.msg || `Signup failed (${res.status})`);
     // Supabase may return session directly or require email confirmation
@@ -77,7 +84,14 @@ const WellpalAuth = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    const data = await res.json();
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error('login() non-JSON response:', res.status, text.substring(0, 500));
+      throw new Error(`Server returned an unexpected response (${res.status}). Please try again later.`);
+    }
     console.log('login() raw response:', res.status, JSON.stringify(data).substring(0, 300));
     if (!res.ok || data.error) throw new Error(data.error || data.msg || `Login failed (${res.status})`);
     this.saveSession(data);
