@@ -692,7 +692,7 @@ footer p{font-size:0.82rem;color:rgba(255,255,255,0.38);}
   </ul>
   <div class="nav-right">
     <div class="nav-profile-btn" id="navProfileBtn" onclick="showPage('profile');return false;" title="My Profile">👤</div>
-    <a href="chatbot (3).html" class="nav-cta" id="navCta">Get Started →</a>
+    <a href="chatbot.html" class="nav-cta" id="navCta">Get Started →</a>
     <button id="navLogout" onclick="WellpalAuth.logout()" style="display:none;background:none;border:1.5px solid rgba(255,127,107,0.5);color:var(--accent-coral);padding:8px 16px;border-radius:100px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent-coral)'" onmouseout="this.style.borderColor='rgba(255,127,107,0.5)'">Logout</button>
   </div>
 </nav>
@@ -711,7 +711,7 @@ footer p{font-size:0.82rem;color:rgba(255,255,255,0.38);}
     <h1>Your Health,<br><em>Intelligently</em><br>Guided.</h1>
     <p class="hero-sub">Wellpal brings medicine guidance, nutrition planning, heart risk prediction, and elderly care into one beautiful, AI-powered platform.</p>
     <div class="hero-actions">
-      <button class="btn-primary" onclick="window.location.href='chatbot (3).html'">Chat with Wellpal ✦</button>
+      <button class="btn-primary" onclick="window.location.href='chatbot.html'">Chat with Wellpal ✦</button>
       <a href="#features" class="btn-ghost">Explore features →</a>
     </div>
   </div>
@@ -1295,7 +1295,7 @@ footer p{font-size:0.82rem;color:rgba(255,255,255,0.38);}
     <a href="#" onclick="showPage('dashboard');return false;">Dashboard</a>
   </div>
   <div class="footer-actions">
-    <button class="footer-chatbot-btn" onclick="window.location.href='chatbot (3).html'" title="Open Chatbot">💬 Chat</button>
+    <button class="footer-chatbot-btn" onclick="window.location.href='chatbot.html'" title="Open Chatbot">💬 Chat</button>
     <button class="footer-up-btn" onclick="showPage('home');setTimeout(()=>{document.getElementById('features').scrollIntoView({behavior:'smooth'})},100);" title="Go to Features">↑</button>
   </div>
 </footer>
@@ -2851,7 +2851,7 @@ window.addEventListener('load', () => {
       });
     });
     document.getElementById('qaWellpalBtn').addEventListener('click', () => {
-      window.location.href = 'chatbot (3).html';
+      window.location.href = 'chatbot.html';
     });
   }
 
@@ -3051,7 +3051,7 @@ window.addEventListener('load', () => {
 
     document.getElementById('qaSend').addEventListener('click', () => {
       const encoded = encodeURIComponent(prompt);
-      window.location.href = 'chatbot (3).html?msg=' + encoded;
+      window.location.href = 'chatbot.html?msg=' + encoded;
     });
   }
 

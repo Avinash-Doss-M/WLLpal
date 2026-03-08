@@ -456,20 +456,20 @@ footer p{font-size:0.82rem;color:rgba(255,255,255,0.38);}
 </head>
 <body>
 <nav>
-  <a href="#" class="nav-logo" onclick="window.location.href='wellpal-v5-updated (2).html';return false;">
+  <a href="#" class="nav-logo" onclick="window.location.href='home.html';return false;">
     <div class="logo-icon">🌿</div>
     Wellpal
   </a>
   <ul class="nav-links">
-    <li><a href="wellpal-v5-updated (2).html#features">Features</a></li>
-    <li><a href="wellpal-v5-updated (2).html#how">How it Works</a></li>
-    <li><a href="wellpal-v5-updated (2).html#reviews">Reviews</a></li>
-    <li><a href="wellpal-v5-updated (2).html#influencers">Influencers</a></li>
+    <li><a href="home.html#features">Features</a></li>
+    <li><a href="home.html#how">How it Works</a></li>
+    <li><a href="home.html#reviews">Reviews</a></li>
+    <li><a href="home.html#influencers">Influencers</a></li>
     <li><a href="dashboard.html" style="opacity:1;color:var(--green-deep);">Dashboard</a></li>
   </ul>
   <div class="nav-right">
     <div class="nav-profile-btn" onclick="window.location.href='profile.html';return false;" title="My Profile">👤</div>
-    <a href="#" class="nav-cta" onclick="window.location.href='chatbot (3).html';return false;">Get Started →</a>
+    <a href="#" class="nav-cta" onclick="window.location.href='chatbot.html';return false;">Get Started →</a>
   </div>
 </nav>
 <!-- ═══════════════════ DASHBOARD PAGE ═══════════════════ -->
@@ -607,7 +607,7 @@ footer p{font-size:0.82rem;color:rgba(255,255,255,0.38);}
   </div>
 
   <div style="margin-top:28px;text-align:center;">
-    <button class="btn-ghost" onclick="window.location.href='wellpal-v5-updated (2).html'">← Back to Home</button>
+    <button class="btn-ghost" onclick="window.location.href='home.html'">← Back to Home</button>
   </div>
 
 </div>
@@ -617,13 +617,13 @@ footer p{font-size:0.82rem;color:rgba(255,255,255,0.38);}
 <script>
 // ── PAGE SWITCHER ──
 function showPage(name) {
-  const map = {home:'wellpal-v5-updated (2)',profile:'profile',dashboard:'dashboard',chatbot:'chatbot (3)'};
+  const map = {home:'home',profile:'profile',dashboard:'dashboard',chatbot:'chatbot'};
   const file = map[name] || name;
   window.location.href = file + '.html';
 }
 
 function showSection(id) {
-  window.location.href='wellpal-v5-updated (2).html#' + id;
+  window.location.href='home.html#' + id;
   setTimeout(() => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({behavior:'smooth'});

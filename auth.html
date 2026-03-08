@@ -146,7 +146,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-b
         </button>
 
         <div class="auth-divider">or</div>
-        <a href="wellpal-v5-updated (2).html" class="auth-skip">Continue as Guest →</a>
+        <a href="home.html" class="auth-skip">Continue as Guest →</a>
       </div>
 
       <!-- ═══ REGISTER ═══ -->
@@ -223,7 +223,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-b
         </button>
 
         <div class="auth-divider">or</div>
-        <a href="wellpal-v5-updated (2).html" class="auth-skip">Continue as Guest →</a>
+        <a href="home.html" class="auth-skip">Continue as Guest →</a>
       </div>
     </div>
 
@@ -241,7 +241,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-b
 <script>
 // If already logged in, redirect to home
 if (WellpalAuth.isLoggedIn()) {
-  window.location.href = 'wellpal-v5-updated (2).html';
+  window.location.href = 'home.html';
 }
 
 // ── Tab switching ──
@@ -295,7 +295,7 @@ async function handleLogin() {
   try {
     await WellpalAuth.login(email, password);
     showMsg('loginMsg', 'Login successful! Redirecting...', 'success');
-    setTimeout(() => { window.location.href = 'wellpal-v5-updated (2).html'; }, 800);
+    setTimeout(() => { window.location.href = 'home.html'; }, 800);
   } catch(e) {
     showMsg('loginMsg', e.message || 'Login failed', 'error');
     setLoading('loginBtn', false);
@@ -370,7 +370,7 @@ async function handleRegister() {
       }
 
       showMsg('regMsg', 'Account created! Redirecting...', 'success');
-      setTimeout(() => { window.location.href = 'wellpal-v5-updated (2).html'; }, 1000);
+      setTimeout(() => { window.location.href = 'home.html'; }, 1000);
     } else {
       // Email confirmation required
       showMsg('regMsg', 'Account created! Check your email for verification, then sign in.', 'success');

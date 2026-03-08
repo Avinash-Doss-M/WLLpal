@@ -456,26 +456,26 @@ footer p{font-size:0.82rem;color:rgba(255,255,255,0.38);}
 </head>
 <body>
 <nav>
-  <a href="#" class="nav-logo" onclick="window.location.href='wellpal-v5-updated (2).html';return false;">
+  <a href="#" class="nav-logo" onclick="window.location.href='home.html';return false;">
     <div class="logo-icon">🌿</div>
     Wellpal
   </a>
   <ul class="nav-links">
-    <li><a href="wellpal-v5-updated (2).html#features">Features</a></li>
-    <li><a href="wellpal-v5-updated (2).html#how">How it Works</a></li>
-    <li><a href="wellpal-v5-updated (2).html#reviews">Reviews</a></li>
-    <li><a href="wellpal-v5-updated (2).html#influencers">Influencers</a></li>
+    <li><a href="home.html#features">Features</a></li>
+    <li><a href="home.html#how">How it Works</a></li>
+    <li><a href="home.html#reviews">Reviews</a></li>
+    <li><a href="home.html#influencers">Influencers</a></li>
     <li><a href="dashboard.html">Dashboard</a></li>
   </ul>
   <div class="nav-right">
     <div class="nav-profile-btn" onclick="window.location.href='profile.html';return false;" title="My Profile">👤</div>
-    <a href="#" class="nav-cta" onclick="window.location.href='chatbot (3).html';return false;">Chat with Wellpal →</a>
+    <a href="#" class="nav-cta" onclick="window.location.href='chatbot.html';return false;">Chat with Wellpal →</a>
     <button id="navLogout" onclick="WellpalAuth.logout()" style="display:none;background:none;border:1.5px solid rgba(255,127,107,0.5);color:var(--accent-coral);padding:8px 16px;border-radius:100px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Logout</button>
   </div>
 </nav>
 <div class="profile-page">
   <div style="margin-bottom:28px;">
-    <button class="btn-ghost" onclick="window.location.href='wellpal-v5-updated (2).html'" style="margin-bottom:12px;">← Back to Home</button>
+    <button class="btn-ghost" onclick="window.location.href='home.html'" style="margin-bottom:12px;">← Back to Home</button>
     <div class="section-tag">My Account</div>
     <h1 class="section-title" style="margin-bottom:4px;">User Profile</h1>
     <p style="font-size:0.9rem;opacity:0.55;">Manage your health profile and personal information</p>
@@ -663,13 +663,13 @@ footer p{font-size:0.82rem;color:rgba(255,255,255,0.38);}
 <script>
 // ── PAGE SWITCHER ──
 function showPage(name) {
-  const map = {home:'wellpal-v5-updated (2)',profile:'profile',dashboard:'dashboard',chatbot:'chatbot (3)'};
+  const map = {home:'home',profile:'profile',dashboard:'dashboard',chatbot:'chatbot'};
   const file = map[name] || name;
   window.location.href = file + '.html';
 }
 
 function showSection(id) {
-  window.location.href='wellpal-v5-updated (2).html#' + id;
+  window.location.href='home.html#' + id;
   setTimeout(() => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({behavior:'smooth'});
@@ -1013,7 +1013,7 @@ function showLoginPrompt() {
       <p style="color:var(--text-body);opacity:0.7;font-size:0.9rem;margin-bottom:24px;line-height:1.5;">Sign in to view and manage your health profile, chat history, and personalized insights.</p>
       <a href="auth.html" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,var(--green-deep),#2a8a5e);color:white;border-radius:14px;font-weight:700;font-size:0.95rem;text-decoration:none;box-shadow:0 4px 16px rgba(26,107,74,0.3);transition:transform 0.2s;">Sign In / Create Account →</a>
       <br>
-      <a href="wellpal-v5-updated (2).html" style="display:inline-block;margin-top:14px;color:var(--green-deep);opacity:0.6;font-size:0.85rem;text-decoration:none;">← Back to Home</a>
+      <a href="home.html" style="display:inline-block;margin-top:14px;color:var(--green-deep);opacity:0.6;font-size:0.85rem;text-decoration:none;">← Back to Home</a>
     </div>`;
   document.body.appendChild(overlay);
 }
@@ -1125,7 +1125,7 @@ async function loadChatHistoryForProfile() {
       item.addEventListener('mouseenter', () => item.style.background = 'rgba(200,245,225,0.15)');
       item.addEventListener('mouseleave', () => item.style.background = '');
       item.addEventListener('click', () => {
-        window.location.href = `chatbot (3).html?session=${session.id}`;
+        window.location.href = `chatbot.html?session=${session.id}`;
       });
       list.appendChild(item);
     });
