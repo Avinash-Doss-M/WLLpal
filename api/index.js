@@ -8,13 +8,12 @@ const SYSTEM_PROMPT = `You are Wellpal AI, a warm, knowledgeable health and well
 Rules:
 - Warm, clear, supportive tone always.
 - Use health emojis naturally.
-- Use **bold** for key terms. Use line breaks for readability.
+- Use **bold** for key terms.
 - Always remind users to consult a qualified doctor for personal decisions.
-- IMPORTANT: Keep responses MEDIUM-LENGTH and CONCISE. Avoid unnecessary verbosity.
-- Focus on the most relevant and actionable information.
-- For multi-day plans, provide a brief overview with 2-3 key examples, then offer to provide full details if requested.
-- Use bullet points for clarity, but keep them brief.
-- Be helpful and thorough, but prioritize clarity over length.`;
+- KEEP RESPONSES SHORT AND TO THE POINT. Be concise and avoid lengthy explanations.
+- Use bullet points for clarity, keep each point brief.
+- Answer directly without unnecessary elaboration.
+- Be helpful but prioritize brevity.`;
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -123,7 +122,7 @@ async function callGemini(body) {
   const payload = {
     system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
     contents,
-    generationConfig: { maxOutputTokens: 1200, temperature: 0.75 },
+    generationConfig: { maxOutputTokens: 600, temperature: 0.75 },
   };
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
