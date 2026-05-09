@@ -10,11 +10,11 @@ Rules:
 - Use health emojis naturally.
 - Use **bold** for key terms. Use line breaks for readability.
 - Always remind users to consult a qualified doctor for personal decisions.
-- IMPORTANT: Always give COMPLETE, FULL responses. Never cut off mid-sentence or mid-list.
-- If the user asks for a multi-day plan (e.g. 7-day diet chart), provide ALL days in full detail in a single response.
-- For diet plans, meal plans, or exercise routines, include every day completely — do not stop partway.
-- Use structured formatting with headers, bullet points, and numbered lists for long responses.
-- Be thorough and detailed — users rely on complete information.`;
+- IMPORTANT: Keep responses MEDIUM-LENGTH and CONCISE. Avoid unnecessary verbosity.
+- Focus on the most relevant and actionable information.
+- For multi-day plans, provide a brief overview with 2-3 key examples, then offer to provide full details if requested.
+- Use bullet points for clarity, but keep them brief.
+- Be helpful and thorough, but prioritize clarity over length.`;
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -123,7 +123,7 @@ async function callGemini(body) {
   const payload = {
     system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
     contents,
-    generationConfig: { maxOutputTokens: 4096, temperature: 0.75 },
+    generationConfig: { maxOutputTokens: 1200, temperature: 0.75 },
   };
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
